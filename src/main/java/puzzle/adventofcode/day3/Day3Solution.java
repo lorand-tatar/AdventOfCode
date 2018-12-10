@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
+import puzzle.adventofcode.Coordinate;
 import puzzle.adventofcode.Solution;
 
 public class Day3Solution implements Solution {
@@ -24,7 +25,7 @@ public class Day3Solution implements Solution {
 
             List<Claim> compiledClaims = compileRawClaims(rawClaims);
 
-            var claimCoverages = new HashMap<Claim.Coordinate, Integer>();
+            var claimCoverages = new HashMap<Coordinate, Integer>();
             long coveredArea = 0;
             var claimsUntouched = new HashMap<Integer, Boolean>();
             compiledClaims.stream().forEach(claim -> claimsUntouched.put(claim.getId(), TRUE));
@@ -36,7 +37,7 @@ public class Day3Solution implements Solution {
                                 x1 <= claim2.getTopRight().getX() &&
                                 claim2.getTopLeft().getY() <= y1 &&
                                 y1 <= claim2.getBottomLeft().getY()) {
-                                var actualCoordinate = new Claim.Coordinate(x1, y1);
+                                var actualCoordinate = new Coordinate(x1, y1);
                                 var actualCoordinateCoverage = Optional.ofNullable(claimCoverages.get(actualCoordinate)).orElse(0);
                                 claimCoverages.put(actualCoordinate, ++actualCoordinateCoverage);
                                 claimsUntouched.put(claim1.getId(), FALSE);
