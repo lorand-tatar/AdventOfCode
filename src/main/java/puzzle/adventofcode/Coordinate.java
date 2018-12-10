@@ -3,19 +3,19 @@ package puzzle.adventofcode;
 import java.util.Objects;
 
 public class Coordinate {
-    private int x;
-    private int y;
+    private Integer x;
+    private Integer y;
 
-    public Coordinate(int x, int y) {
+    public Coordinate(Integer x, Integer y) {
         this.x = x;
         this.y = y;
     }
 
-    public int getX() {
+    public Integer getX() {
         return x;
     }
 
-    public int getY() {
+    public Integer getY() {
         return y;
     }
 

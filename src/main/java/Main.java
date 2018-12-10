@@ -11,8 +11,8 @@ import puzzle.adventofcode.day6.Day6Solution;
 public class Main {
 
     public static void main(String[] args) {
-        var solutions = List.of(new Day1Solution(), new Day2Solution(), new Day3Solution(),
-                new Day4Solution(), new Day5Solution(), new Day6Solution());
+        var solutions = List.of(/*new Day1Solution(), new Day2Solution(), new Day3Solution(),
+                new Day4Solution(), new Day5Solution(),*/ new Day6Solution());
         solutions.stream().forEach(Solution::run);
     }
 }
