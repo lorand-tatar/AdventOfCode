@@ -1,5 +1,6 @@
 package puzzle.adventofcode.day7;
 
+import static java.lang.Character.getNumericValue;
 import static java.util.stream.Collectors.toList;
 
 import java.util.HashSet;
@@ -27,37 +28,28 @@ public class TaskGraph {
     @Override
     public String toString() {
         return "TaskGraph{" +
-                "nodes=" + nodes +
-                '}';
+            "nodes=" + nodes +
+            '}';
     }
 
     public static class GraphNode {
         private Character task;
+        private Integer taskWorkTimeLeft;
         private Set<GraphNode> dependencies;
         private Set<GraphNode> followUps;
 
         public GraphNode(Character task) {
             this.task = task;
+            taskWorkTimeLeft = 61 + getNumericValue(task) - getNumericValue('A');
             dependencies = new HashSet<>();
             followUps = new HashSet<>();
         }
 
         public GraphNode(Character task, Set<GraphNode> dependencies, Set<GraphNode> followUps) {
             this.task = task;
+            taskWorkTimeLeft = 61 + getNumericValue(task) - getNumericValue('A');
             this.dependencies = dependencies;
             this.followUps = followUps;
-        }
-
-        public Character getTask() {
-            return task;
-        }
-
-        public Set<GraphNode> getDependencies() {
-            return dependencies;
-        }
-
-        public Set<GraphNode> getFollowUps() {
-            return followUps;
         }
 
         public void addDependency(GraphNode dependency) {
@@ -66,6 +58,26 @@ public class TaskGraph {
 
         public void addFollowUp(GraphNode followUp) {
             followUps.add(followUp);
+        }
+
+        public void decreaseWorkTimeLeftByOneTick() {
+            taskWorkTimeLeft--;
+        }
+
+        public Character getTask() {
+            return task;
+        }
+
+        public Integer getTaskWorkTimeLeft() {
+            return taskWorkTimeLeft;
+        }
+
+        public Set<GraphNode> getDependencies() {
+            return dependencies;
+        }
+
+        public Set<GraphNode> getFollowUps() {
+            return followUps;
         }
 
         @Override
@@ -86,10 +98,11 @@ public class TaskGraph {
         @Override
         public String toString() {
             return "GraphNode{" +
-                    "task=" + task +
-                    ", dependencies=" + dependencies.stream().map(GraphNode::getTask).collect(toList()) +
-                    ", followUps=" + followUps.stream().map(GraphNode::getTask).collect(toList()) +
-                    '}';
+                "task=" + task +
+                ", taskWorkTimeLeft=" + taskWorkTimeLeft +
+                ", dependencies=" + dependencies.stream().map(GraphNode::getTask).collect(toList()) +
+                ", followUps=" + followUps.stream().map(GraphNode::getTask).collect(toList()) +
+                '}';
         }
     }
 }
