@@ -1,28 +1,21 @@
 package puzzle.adventofcode.day7;
 
+import puzzle.adventofcode.Solution;
+import puzzle.adventofcode.day7.TaskGraph.GraphNode;
+
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.IntStream;
+
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
 import static java.nio.file.Files.readAllLines;
 import static java.util.Comparator.comparing;
-import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
-
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
-
-import puzzle.adventofcode.Solution;
-import puzzle.adventofcode.day7.TaskGraph.GraphNode;
 
 public class Day7Solution implements Solution {
 
@@ -32,56 +25,64 @@ public class Day7Solution implements Solution {
     @Override
     public void run() {
         try {
-            var rawInstructions = readAllLines(Path.of("C:/stash/AdventOfCode/src/main/resources/puzzle7a_input.txt"));
+            var rawInstructions = readAllLines(Path.of("C:/Users/Flori/IdeaProjects/AdventOfCode/src/main/resources/puzzle7a_input.txt"));
 
             List<Prerequisite> prerequisites = rawInstructions.stream()
-                .map(instruction -> {
-                    Matcher instructionMatcher = INSTRUCTION_PATTERN.matcher(instruction);
-                    instructionMatcher.lookingAt();
-                    return new Prerequisite(instructionMatcher.group(1).charAt(0), instructionMatcher.group(2).charAt(0));
-                })
-                .collect(toList());
+                    .map(instruction -> {
+                        Matcher instructionMatcher = INSTRUCTION_PATTERN.matcher(instruction);
+                        instructionMatcher.lookingAt();
+                        return new Prerequisite(instructionMatcher.group(1).charAt(0), instructionMatcher.group(2).charAt(0));
+                    })
+                    .collect(toList());
 
             var graph = new TaskGraph(new HashSet<>());
             buildTaskGraph(prerequisites, graph);
             System.out.println(graph);
             var startCandidates = graph.getNodes().stream()
-                .filter(node -> node.getDependencies().isEmpty())
-                .collect(toList());
+                    .filter(node -> node.getDependencies().isEmpty())
+                    .collect(toList());
             startCandidates.sort(comparing(GraphNode::getTask));
             var endNodes = graph.getNodes().stream()
-                .filter(node -> node.getFollowUps().isEmpty())
-                .collect(toList());
+                    .filter(node -> node.getFollowUps().isEmpty())
+                    .collect(toList());
             // O P V starter, Q ending
             var processableNodes = startCandidates;
             var taskSequence = "";
             var doneSteps = new HashSet<GraphNode>();
             var timeTick = 0;
-            var busy = false;
-            var workerBusiness = IntStream.range(0, WORKER_COUNT).mapToObj(workerId -> Map.entry(workerId, FALSE)).collect(toSet());
-            GraphNode expandedNode = null;
-            HashMap<Integer, GraphNode> workerAssignment = IntStream.range(0, WORKER_COUNT).mapToObj(workerId -> Map.entry(workerId, null));
+            var workerBusiness = new HashMap<Integer, Boolean>();
+            IntStream.range(0, WORKER_COUNT)
+                    .mapToObj(workerId -> Map.entry(workerId, FALSE))
+                    .forEach(entry -> workerBusiness.put(entry.getKey(), entry.getValue()));
+            HashMap<Integer, GraphNode> workerAssignment = new HashMap<>();
+            IntStream.range(0, WORKER_COUNT)
+                    .mapToObj(workerId -> (Integer) workerId)
+                    .forEach(workerId -> workerAssignment.put(workerId, null));
             while (workerBusiness.containsValue(TRUE) || !processableNodes.isEmpty()) {
                 System.out.println("fresh start: " + processableNodes.stream().map(GraphNode::getTask).collect(toList()));
-                List<GraphNode> finalProcessableNodes = processableNodes;
+                if (workerBusiness.containsValue(FALSE)) {
+                    var availableWorkers = workerBusiness.entrySet().stream()
+                            .filter(entry -> !entry.getValue())
+                            .collect(toList());
+                    for (var worker : availableWorkers) {
+                        workerAssignment.put(worker.getKey(), processableNodes.remove(0));
+                        taskSequence = taskSequence.concat(String.valueOf(workerAssignment.get(worker.getKey()).getTask()));
+                        workerBusiness.put(worker.getKey(), TRUE);
+                    }
+                }
                 workerBusiness.entrySet().stream()
-                    .filter(not(Map.Entry::getValue))
-                .forEach(workerEntry -> {
-                    workerAssignment.put(workerEntry.getKey(), finalProcessableNodes.remove(0));
-                });
+                        .filter(entry -> entry.getValue())
+                        .forEach(entry -> workerAssignment.get(entry.getKey()).decreaseWorkTimeLeftByOneTick());
+                List<GraphNode> finalProcessableNodes = processableNodes;
+                workerAssignment.entrySet().stream()
+                        .filter(entry -> entry.getValue().getTaskWorkTimeLeft() <= 0)
+                        .forEach(entry -> {
+                            doneSteps.add(entry.getValue());
+                            finalProcessableNodes.addAll(entry.getValue().getFollowUps());
+                            System.out.println("after inflate: " + finalProcessableNodes.stream().map(GraphNode::getTask).collect(toList()));
+                            workerBusiness.put(entry.getKey(), FALSE);
+                        });
                 processableNodes = finalProcessableNodes;
-                if (!busy) {
-                    expandedNode = processableNodes.remove(0);
-                    taskSequence = taskSequence.concat(String.valueOf(expandedNode.getTask()));
-                    busy = true;
-                }
-                expandedNode.decreaseWorkTimeLeftByOneTick();
-                if (expandedNode.getTaskWorkTimeLeft() <= 0) {
-                    doneSteps.add(expandedNode);
-                    processableNodes.addAll(expandedNode.getFollowUps());
-                    System.out.println("after inflate: " + processableNodes.stream().map(GraphNode::getTask).collect(toList()));
-                    busy = false;
-                }
                 var intermediateSet = new HashSet<GraphNode>();
                 intermediateSet.addAll(processableNodes);
                 intermediateSet.removeAll(doneSteps);
@@ -102,17 +103,17 @@ public class Day7Solution implements Solution {
 
     private void buildTaskGraph(List<Prerequisite> prerequisites, TaskGraph graph) {
         prerequisites.stream()
-            .peek(prerequisite -> {
-                var nodes = graph.getNodes();
-                nodes.add(new GraphNode(prerequisite.getPrerequisite()));
-                nodes.add(new GraphNode(prerequisite.getOfThisOne()));
-            })
-            .forEach(prerequisite -> {
-                var leftNode = graph.lookUpNodeForTask(prerequisite.getPrerequisite());
-                var rightNode = graph.lookUpNodeForTask(prerequisite.getOfThisOne());
-                leftNode.addFollowUp(rightNode);
-                rightNode.addDependency(leftNode);
-            });
+                .peek(prerequisite -> {
+                    var nodes = graph.getNodes();
+                    nodes.add(new GraphNode(prerequisite.getPrerequisite()));
+                    nodes.add(new GraphNode(prerequisite.getOfThisOne()));
+                })
+                .forEach(prerequisite -> {
+                    var leftNode = graph.lookUpNodeForTask(prerequisite.getPrerequisite());
+                    var rightNode = graph.lookUpNodeForTask(prerequisite.getOfThisOne());
+                    leftNode.addFollowUp(rightNode);
+                    rightNode.addDependency(leftNode);
+                });
     }
 
     private class Prerequisite {
