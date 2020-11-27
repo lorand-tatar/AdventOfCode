@@ -1,4 +1,4 @@
-package puzzle.adventofcode.day4;
+package puzzle.adventofcode.year2018.day4;
 
 import static java.lang.Math.toIntExact;
 import static java.nio.file.Files.readAllLines;
@@ -7,14 +7,19 @@ import static java.time.ZoneOffset.UTC;
 import static java.time.temporal.ChronoUnit.MINUTES;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
-import static puzzle.adventofcode.day4.MessageType.FALLS_ASLEEP;
-import static puzzle.adventofcode.day4.MessageType.WAKES_UP;
+
+import static puzzle.adventofcode.year2018.day4.MessageType.FALLS_ASLEEP;
+import static puzzle.adventofcode.year2018.day4.MessageType.WAKES_UP;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 
@@ -27,15 +32,15 @@ public class Day4Solution implements Solution {
     @Override
     public void run() {
         try {
-            var rawSystemLogs = readAllLines(Path.of("C:/Users/Flori/IdeaProjects/AdventOfCode/src/main/resources/puzzle4a_input.txt"));
+            var rawSystemLogs = readAllLines(Path.of("C:/github/AdventOfCode/src/main/resources/puzzle4a_input.txt"));
             var logEntriesInOrder = rawSystemLogs.stream()
-                    .map(this::convertToLogEntry)
-                    .sorted(logComparator)
-                    .collect(toList());
+                .map(this::convertToLogEntry)
+                .sorted(logComparator)
+                .collect(toList());
 
             MessageType previousLogType = null;
             for (var logEntry : logEntriesInOrder) {
-                if (MessageType.FALLS_ASLEEP.equals(previousLogType) && logEntry.getMessage().equals(MessageType.BEGINS_SHIFT)) {
+                if (FALLS_ASLEEP.equals(previousLogType) && logEntry.getMessage().equals(MessageType.BEGINS_SHIFT)) {
                     System.out.println("Damn, we have an unawaken guy before shift!");
                 }
                 previousLogType = logEntry.getMessage();
@@ -45,8 +50,8 @@ public class Day4Solution implements Solution {
             System.out.println(asleepMinutes);
 
             Integer mostAsleepGuardId = asleepMinutes.entrySet().stream()
-                    .max(comparing(Map.Entry::getValue))
-                    .map(Map.Entry::getKey).orElseThrow();
+                .max(comparing(Map.Entry::getValue))
+                .map(Map.Entry::getKey).orElseThrow();
             System.out.println("The guard that was the most minutes asleep: #" + mostAsleepGuardId);
 
             var favoriteSleepMinuteAndFrequency = determineFavoriteSleepMinute(logEntriesInOrder, mostAsleepGuardId);
@@ -54,13 +59,13 @@ public class Day4Solution implements Solution {
             System.out.println("The product of the two numbers is: " + mostAsleepGuardId * favoriteSleepMinuteAndFrequency.getKey());
 
             Map.Entry<Integer, Map.Entry<Integer, Integer>> chosenGuardWithHisFavoriteMinuteToSleep = logEntriesInOrder.stream()
-                    .map(LogEntry::getGuardId)
-                    .distinct()
-                    .map(guardId -> {
-                        return Map.entry(guardId, determineFavoriteSleepMinute(logEntriesInOrder, guardId));
-                    })
-                    .max(comparing(guardEntry -> guardEntry.getValue().getValue()))
-                    .orElseThrow();
+                .map(LogEntry::getGuardId)
+                .distinct()
+                .map(guardId -> {
+                    return Map.entry(guardId, determineFavoriteSleepMinute(logEntriesInOrder, guardId));
+                })
+                .max(comparing(guardEntry -> guardEntry.getValue().getValue()))
+                .orElseThrow();
             System.out.println("Guard #" + chosenGuardWithHisFavoriteMinuteToSleep.getKey() + " slept the most in minute " + chosenGuardWithHisFavoriteMinuteToSleep.getValue().getKey());
             System.out.println("The product of the two numbers is: " + chosenGuardWithHisFavoriteMinuteToSleep.getKey() * chosenGuardWithHisFavoriteMinuteToSleep.getValue().getKey());
         } catch (IOException e) {
@@ -72,7 +77,7 @@ public class Day4Solution implements Solution {
 
     private Map.Entry<Integer, Integer> determineFavoriteSleepMinute(List<LogEntry> logEntriesInOrder, Integer mostAsleepGuardId) {
         List<LogEntry> mostAsleepGuardsLogs = logEntriesInOrder.stream()
-                .filter(logEntry -> logEntry.getGuardId().equals(mostAsleepGuardId)).collect(toList());
+            .filter(logEntry -> logEntry.getGuardId().equals(mostAsleepGuardId)).collect(toList());
 
         Map<Integer, Integer> howManyTimesAsleepInAMinute = new HashMap<>();
         LocalDateTime previousTimestamp = null;
@@ -81,16 +86,16 @@ public class Day4Solution implements Solution {
                 previousTimestamp = logEntry.getTimestamp();
             } else if (logEntry.getMessage().equals(WAKES_UP)) {
                 IntStream.range(previousTimestamp.getMinute(), logEntry.getTimestamp().getMinute())
-                        .forEach(minute -> {
-                            var sleptCntInThatMinuteSoFar = Optional.ofNullable(howManyTimesAsleepInAMinute.get(minute)).orElse(0);
-                            howManyTimesAsleepInAMinute.put(minute, sleptCntInThatMinuteSoFar + 1);
-                        });
+                    .forEach(minute -> {
+                        var sleptCntInThatMinuteSoFar = Optional.ofNullable(howManyTimesAsleepInAMinute.get(minute)).orElse(0);
+                        howManyTimesAsleepInAMinute.put(minute, sleptCntInThatMinuteSoFar + 1);
+                    });
             }
         }
 
         return howManyTimesAsleepInAMinute.entrySet().stream()
-                .max(comparing(Map.Entry::getValue))
-                .orElse(Map.entry(-1, -1));
+            .max(comparing(Map.Entry::getValue))
+            .orElse(Map.entry(-1, -1));
     }
 
     private Map<Integer, Integer> setGuardIdsAndCountAsleepMinutes(List<LogEntry> logEntriesInOrder) {
@@ -123,8 +128,8 @@ public class Day4Solution implements Solution {
     private LogEntry convertToLogEntry(String rawLogEntry) {
         String[] entryParts = rawLogEntry.split("\\]\\s");
         var entry = new LogEntry(LocalDateTime.parse(entryParts[0].substring(1), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")),
-                MessageType.parse(entryParts[1]),
-                extractGuardId(entryParts[1]));
+            MessageType.parse(entryParts[1]),
+            extractGuardId(entryParts[1]));
         return entry;
     }
 

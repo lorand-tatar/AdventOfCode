@@ -1,4 +1,4 @@
-package puzzle.adventofcode.day1;
+package puzzle.adventofcode.year2018.day1;
 
 import static java.nio.file.Files.readAllLines;
 
@@ -15,7 +15,7 @@ public class Day1Solution implements Solution {
         var actualValues = new ArrayList<Long>();
         var valueBuckets = new HashSet<Long>();
         try {
-            var deltaValues = readAllLines(Path.of("C:/stash/AdventOfCode/src/main/resources/puzzle1b_input.txt"));
+            var deltaValues = readAllLines(Path.of("C:/github/AdventOfCode/src/main/resources/puzzle1b_input.txt"));
             System.out.println("Delta array: " + deltaValues);
 
             /*do {

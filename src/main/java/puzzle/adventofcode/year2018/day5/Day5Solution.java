@@ -1,6 +1,13 @@
-package puzzle.adventofcode.day5;
+package puzzle.adventofcode.year2018.day5;
 
-import puzzle.adventofcode.Solution;
+import static java.lang.Character.isLowerCase;
+import static java.lang.Character.isUpperCase;
+import static java.lang.Character.toLowerCase;
+import static java.lang.Character.toUpperCase;
+import static java.nio.file.Files.readString;
+import static java.util.Comparator.comparing;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -8,18 +15,14 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.Set;
 
-import static java.lang.Character.*;
-import static java.nio.file.Files.readString;
-import static java.util.Comparator.comparing;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
+import puzzle.adventofcode.Solution;
 
 public class Day5Solution implements Solution {
 
     @Override
     public void run() {
         try {
-            var originalPolymer = readString(Path.of("C:/Users/Flori/IdeaProjects/AdventOfCode/src/main/resources/puzzle5a_input.txt"));
+            var originalPolymer = readString(Path.of("C:/github/AdventOfCode/src/main/resources/puzzle5a_input.txt"));
 
             System.out.println("The remaining polymer size: " + reducePolymer(originalPolymer));
 

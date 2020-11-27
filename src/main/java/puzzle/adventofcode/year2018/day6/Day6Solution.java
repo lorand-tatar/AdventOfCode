@@ -1,14 +1,4 @@
-package puzzle.adventofcode.day6;
-
-import puzzle.adventofcode.Coordinate;
-import puzzle.adventofcode.Solution;
-
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Stream;
+package puzzle.adventofcode.year2018.day6;
 
 import static java.lang.Integer.valueOf;
 import static java.lang.Math.abs;
@@ -17,12 +7,22 @@ import static java.util.Comparator.comparing;
 import static java.util.Comparator.naturalOrder;
 import static java.util.stream.Collectors.toList;
 
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Stream;
+
+import puzzle.adventofcode.year2018.Coordinate;
+import puzzle.adventofcode.Solution;
+
 public class Day6Solution implements Solution {
 
     @Override
     public void run() {
         try {
-            var rawCoordinates = readAllLines(Path.of("C:/Users/Flori/IdeaProjects/AdventOfCode/src/main/resources/puzzle6a_input.txt"));
+            var rawCoordinates = readAllLines(Path.of("C:/github/AdventOfCode/src/main/resources/puzzle6a_input.txt"));
 
             final List<Coordinate> coordinates = rawCoordinates.stream()
                     .map(coordinate -> coordinate.split(", "))

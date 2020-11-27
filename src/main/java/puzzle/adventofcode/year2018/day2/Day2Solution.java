@@ -1,4 +1,4 @@
-package puzzle.adventofcode.day2;
+package puzzle.adventofcode.year2018.day2;
 
 import static java.nio.file.Files.readAllLines;
 
@@ -17,7 +17,7 @@ public class Day2Solution implements Solution {
     @Override
     public void run() {
         try {
-            var boxIds = readAllLines(Path.of("C:/stash/AdventOfCode/src/main/resources/puzzle2a_input.txt"));
+            var boxIds = readAllLines(Path.of("C:/github/AdventOfCode/src/main/resources/puzzle2a_input.txt"));
             System.out.println("Box ids: " + boxIds + "\n, " + boxIds.size() + " of them");
 
             boxIds.stream().forEach(this::countOccurences);

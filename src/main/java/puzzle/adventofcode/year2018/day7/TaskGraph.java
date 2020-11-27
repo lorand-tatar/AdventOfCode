@@ -1,4 +1,4 @@
-package puzzle.adventofcode.day7;
+package puzzle.adventofcode.year2018.day7;
 
 import static java.lang.Character.getNumericValue;
 import static java.util.stream.Collectors.toList;
