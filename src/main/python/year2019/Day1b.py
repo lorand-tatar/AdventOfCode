@@ -1,4 +1,4 @@
-file_path = 'day1a_input.txt'
+file_path = 'inputs/day1a_input.txt'
 
 total_fuel_required = 0
 

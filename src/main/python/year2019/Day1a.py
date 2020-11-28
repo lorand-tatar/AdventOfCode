@@ -1,4 +1,4 @@
-file_path = 'day1a_input.txt'
+file_path = 'inputs/day1a_input.txt'
 
 with open(file_path, 'r') as file:
     total_fuel_required = 0
