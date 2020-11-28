@@ -1,4 +1,4 @@
-package puzzle.adventofcode.day3;
+package puzzle.adventofcode.year2018.day3;
 
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
-import puzzle.adventofcode.Coordinate;
+import puzzle.adventofcode.year2018.Coordinate;
 import puzzle.adventofcode.Solution;
 
 public class Day3Solution implements Solution {
@@ -20,7 +20,7 @@ public class Day3Solution implements Solution {
     @Override
     public void run() {
         try {
-            var rawClaims = readAllLines(Path.of("C:/stash/AdventOfCode/src/main/resources/puzzle3a_input.txt"));
+            var rawClaims = readAllLines(Path.of("C:/github/AdventOfCode/src/main/resources/puzzle3a_input.txt"));
             System.out.println("Raw claims: " + rawClaims);
 
             List<Claim> compiledClaims = compileRawClaims(rawClaims);

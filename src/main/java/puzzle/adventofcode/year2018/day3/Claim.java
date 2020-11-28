@@ -1,6 +1,6 @@
-package puzzle.adventofcode.day3;
+package puzzle.adventofcode.year2018.day3;
 
-import puzzle.adventofcode.Coordinate;
+import puzzle.adventofcode.year2018.Coordinate;
 
 class Claim {
     private int id;

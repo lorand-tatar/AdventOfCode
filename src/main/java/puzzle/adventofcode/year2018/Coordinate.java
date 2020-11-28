@@ -1,4 +1,4 @@
-package puzzle.adventofcode;
+package puzzle.adventofcode.year2018;
 
 import java.util.Objects;
 

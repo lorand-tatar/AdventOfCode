@@ -1,4 +1,4 @@
-package puzzle.adventofcode.day4;
+package puzzle.adventofcode.year2018.day4;
 
 import java.time.LocalDateTime;
 import java.util.Comparator;
