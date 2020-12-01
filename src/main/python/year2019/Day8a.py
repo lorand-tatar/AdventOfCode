@@ -1,6 +1,6 @@
 import numpy as np
 
-file_path = 'inputs/day8a_input.txt'
+file_path = 'inputs/day8_input.txt'
 
 with open(file_path, 'r') as file:
     sequence = file.readline()

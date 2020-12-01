@@ -1,4 +1,4 @@
-file_path = 'inputs/day5a_input.txt'
+file_path = 'inputs/day5_input.txt'
 
 
 def parse_instr(command):

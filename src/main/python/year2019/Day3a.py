@@ -1,4 +1,4 @@
-file_path = 'inputs/day3a_input.txt'
+file_path = 'inputs/day3_input.txt'
 
 coordinate_set1 = {(0, 0)}
 coordinate_set2 = {(0, 0)}

@@ -1,4 +1,4 @@
-file_path = 'inputs/day6a_input.txt'
+file_path = 'inputs/day6_input.txt'
 
 
 class Planet:

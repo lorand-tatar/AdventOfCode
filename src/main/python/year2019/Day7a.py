@@ -1,6 +1,6 @@
 import itertools
 
-file_path = 'inputs/day7a_input.txt'
+file_path = 'inputs/day7_input.txt'
 
 
 def parse_instr(command):

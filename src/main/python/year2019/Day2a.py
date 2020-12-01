@@ -1,4 +1,4 @@
-file_path = 'inputs/day2a_input.txt'
+file_path = 'inputs/day2_input.txt'
 
 
 def do_stuff(pos):

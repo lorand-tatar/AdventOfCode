@@ -1,8 +1,7 @@
-import numpy as np
-
-file_path = 'inputs/day9a_input.txt'
+file_path = 'inputs/day9_input.txt'
 
 
+# 56702 -> 2, 7, 6, 5
 def parse_instruction(instruction):
     #         Command,
     return [instruction - (instruction // 100) * 100,
@@ -12,7 +11,6 @@ def parse_instruction(instruction):
             instruction // 1000 - (instruction // 10000) * 10,
             # Parameter mode for parameter 3
             instruction // 10000]
-# 56702 -> 2, 7, 6, 5
 
 
 def retrieve_data_and_write_address(mem_read_parameters, mem_write_parameter, modes, relative_param_mode_base):
@@ -60,12 +58,14 @@ def execute_command(instruction_pointer, relative_param_mode_base):
         instructions_and_data[operands[2]] = operands[0] * operands[1]
         return [4, 0]
     elif command_code == 3:
-        operands = retrieve_data_and_write_address([], instructions_and_data[instruction_pointer + 1], command_and_modes[1:], relative_param_mode_base)
+        operands = retrieve_data_and_write_address([], instructions_and_data[instruction_pointer + 1], command_and_modes[1:],
+                                                   relative_param_mode_base)
         typed_value = int(input("Please add an input: "))
         instructions_and_data[operands[0]] = typed_value
         return [2, 0]
     elif command_code == 4:
-        value_to_print = retrieve_data_and_write_address([instructions_and_data[instruction_pointer + 1]], -63000, command_and_modes[1:], relative_param_mode_base)
+        value_to_print = retrieve_data_and_write_address([instructions_and_data[instruction_pointer + 1]], -63000, command_and_modes[1:],
+                                                         relative_param_mode_base)
         print("Program output:", value_to_print[0])
         return [2, 0]
     elif command_code == 5:
@@ -97,7 +97,8 @@ def execute_command(instruction_pointer, relative_param_mode_base):
         instructions_and_data[operands[2]] = 1 if operands[0] == operands[1] else 0
         return [4, 0]
     elif command_code == 9:
-        return [2, retrieve_data_and_write_address([instructions_and_data[instruction_pointer + 1]], -63000, command_and_modes[1:], relative_param_mode_base)[0]]
+        return [2, retrieve_data_and_write_address([instructions_and_data[instruction_pointer + 1]], -63000, command_and_modes[1:],
+                                                   relative_param_mode_base)[0]]
     else:
         print("Ooops - wrong command code", command_code)
         exit(-1)
