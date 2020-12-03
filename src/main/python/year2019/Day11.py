@@ -154,7 +154,7 @@ instruction_pointer = 0
 relative_param_mode_base = 0
 # Basic starter phase/provided robot rotation info for the last round == 0, read a color input==1, provided a paint color == 2
 phase = 0
-points_painted = []
+panels_painted = []
 while instructions_and_data[instruction_pointer] != 99:
     # Giving the camera picture(color) as input and expecting the program to store output value if any
     command_returned = execute_command(instruction_pointer, relative_param_mode_base, lambda: hull[robot_position], lambda a: store_output(a))
@@ -165,8 +165,8 @@ while instructions_and_data[instruction_pointer] != 99:
     if phase == 2 and prev_phase == 1:
         hull[robot_position] = output_storage
         # Collect not yet visited but now painted panel
-        if robot_position not in points_painted:
-            points_painted.append(robot_position)
+        if robot_position not in panels_painted:
+            panels_painted.append(robot_position)
     # We have got our movement instruction
     if phase == 3:
         (current_x, current_y) = robot_position
@@ -192,9 +192,10 @@ while instructions_and_data[instruction_pointer] != 99:
     if phase > 2:
         phase = 0
 
-print("No of points painted at least once:", len(points_painted))
+print("No of points painted at least once:", len(panels_painted))
 
 with open("output/hull_painting.txt", 'w') as out_file:
+    # Transposed hull matrix as array handling made the x and y exchanged
     for row in np.transpose(hull):
         for element in row:
             out_file.write(element.astype(str))
