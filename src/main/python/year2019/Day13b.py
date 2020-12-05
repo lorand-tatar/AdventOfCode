@@ -1,8 +1,10 @@
 import sys
-
+from os import system
 import numpy as np
+import time
+import keyboard
 
-file_path = 'inputs/day11_input.txt'
+file_path = 'inputs/day13_input.txt'
 
 
 # 56702 -> 2, 7, 6, 5
@@ -78,7 +80,8 @@ def execute_command(instruction_pointer, relative_param_mode_base, input_callbac
                                                    relative_param_mode_base)
         input_value = input_callback()
         instructions_and_data[operands[0]] = input_value
-        return [2, 0, 1]
+        # FIXME modified 3rd returned parameter for this puzzle! Probably should be changed for the next one
+        return [2, 0, 0]
     elif command_code == 4:
         value_to_output = retrieve_data_and_write_address([instructions_and_data[instruction_pointer + 1]], -63000, command_and_modes[1:],
                                                           relative_param_mode_base)
@@ -126,6 +129,45 @@ def store_output(value):
     output_storage = value
 
 
+def draw_screen_in_file(screen):
+    with open("output/game_board.txt", 'w', encoding="utf-8") as out_file:
+        # Transposed game matrix as array handling made the x and y exchanged
+        for row in np.transpose(screen):
+            for element in row:
+                if element == 0:
+                    game_tile = '  '
+                if element == 1:
+                    game_tile = '██'
+                if element == 2:
+                    game_tile = '░░'
+                if element == 3:
+                    game_tile = '══'
+                if element == 4:
+                    game_tile = '\u256d\u256e'
+                out_file.write(game_tile)
+            out_file.write('\n')
+
+
+def draw_screen(points, screen):
+    system("cls")
+    print("Points:", points)
+    # Transposed game matrix as array handling made the x and y exchanged
+    for row in np.transpose(screen):
+        for element in row:
+            if element == 0:
+                game_tile = '  '
+            if element == 1:
+                game_tile = '██'
+            if element == 2:
+                game_tile = '░░'
+            if element == 3:
+                game_tile = '══'
+            if element == 4:
+                game_tile = '\u256d\u256e'
+            print(game_tile, end="")
+        print('\n', end="")
+
+
 np.set_printoptions(threshold=sys.maxsize)
 
 with open(file_path, 'r') as file:
@@ -138,65 +180,56 @@ for x in sequence.split(','):
     instructions_and_data[i] = int(x)
     i += 1
 
-# Robot hardware
-# Trying to contain the whole movement, starting with black (0) panels
-hull = np.zeros((200, 200))
-hull = hull.astype(int)
-# Robot starting in the middle
-robot_position = (100, 100)
-# According to the second part of day11 puzzle, it should be a single white (1) starter field - uncomment below to solve 11a
-hull[robot_position] = 1
-# Robot heads north initially
-robot_head = 0
+screen = np.zeros((40, 40))
+screen = screen.astype(int)
+phase = 0
+points = 0
+draw_screen(points, screen)
+points_calculation = False
+game_init = True
+instructions_and_data[0] = 2
 
 # Intcode computer reset
 instruction_pointer = 0
 relative_param_mode_base = 0
-# Basic starter phase/provided robot rotation info for the last round == 0, read a color input==1, provided a paint color == 2
-phase = 0
-panels_painted = []
+
+
+def check_keyboard_input():
+    if keyboard.is_pressed("left"):
+        return -1
+    elif keyboard.is_pressed("right"):
+        return 1
+    return 0
+
+
 while instructions_and_data[instruction_pointer] != 99:
-    # Giving the camera picture(color) as input and expecting the program to store output value if any
-    command_returned = execute_command(instruction_pointer, relative_param_mode_base, lambda: hull[robot_position], lambda a: store_output(a))
+    command_returned = execute_command(instruction_pointer, relative_param_mode_base, check_keyboard_input, store_output)
     prev_phase = phase
-    # It will only really increase if an input/output command was executed
-    phase += command_returned[2]
-    # Just got our first output
+    phase = (phase + command_returned[2]) % 3
+    if phase == 1 and prev_phase == 0:
+        x = output_storage
+        points_calculation = x == -1
+        if points_calculation and game_init:
+            game_init = False
     if phase == 2 and prev_phase == 1:
-        hull[robot_position] = output_storage
-        # Collect not yet visited but now painted panel
-        if robot_position not in panels_painted:
-            panels_painted.append(robot_position)
-    # We have got our movement instruction
-    if phase == 3:
-        (current_x, current_y) = robot_position
-        # Rotating robot according to program output
-        robot_head = (robot_head + 1) % 4 if output_storage == 1 else robot_head - 1
-        if robot_head == -1:
-            robot_head = 3
-        # Moving robot by one panel towards its heading
-        if robot_head == 0:
-            robot_position = (current_x, current_y - 1)
-        elif robot_head == 1:
-            robot_position = (current_x + 1, current_y)
-        elif robot_head == 2:
-            robot_position = (current_x, current_y + 1)
-        elif robot_head == 3:
-            robot_position = (current_x - 1, current_y)
+        y = output_storage
+    if phase == 0 and prev_phase == 2:
+        if not points_calculation:
+            screen[x][y] = output_storage
+        else:
+            points = output_storage
+        if not game_init:
+            draw_screen(points, screen)
+            time.sleep(0.001)
 
     # Next instruction in IntCode computer
     instruction_pointer += command_returned[0]
     # Change the memory offset base (only changes with command no. 9 in reality)
     relative_param_mode_base += command_returned[1]
-    # If we are just done with a movement we should wait for the next input
-    if phase > 2:
-        phase = 0
 
-print("No of points painted at least once:", len(panels_painted))
-
-with open("output/hull_painting.txt", 'w') as out_file:
-    # Transposed hull matrix as array handling made the x and y exchanged
-    for row in np.transpose(hull):
-        for element in row:
-            out_file.write(element.astype(str))
-        out_file.write('\n')
+block_cnt = 0
+for row in screen:
+    for element in row:
+        if element == 2:
+            block_cnt += 1
+print("Remained blocks:", block_cnt)

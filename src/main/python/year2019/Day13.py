@@ -2,7 +2,9 @@ import sys
 
 import numpy as np
 
-file_path = 'inputs/day11_input.txt'
+import time
+
+file_path = 'inputs/day13_input.txt'
 
 
 # 56702 -> 2, 7, 6, 5
@@ -138,65 +140,48 @@ for x in sequence.split(','):
     instructions_and_data[i] = int(x)
     i += 1
 
-# Robot hardware
-# Trying to contain the whole movement, starting with black (0) panels
-hull = np.zeros((200, 200))
-hull = hull.astype(int)
-# Robot starting in the middle
-robot_position = (100, 100)
-# According to the second part of day11 puzzle, it should be a single white (1) starter field - uncomment below to solve 11a
-hull[robot_position] = 1
-# Robot heads north initially
-robot_head = 0
+screen = np.zeros((40, 40))
+screen = screen.astype(int)
+phase = 0
 
 # Intcode computer reset
 instruction_pointer = 0
 relative_param_mode_base = 0
-# Basic starter phase/provided robot rotation info for the last round == 0, read a color input==1, provided a paint color == 2
-phase = 0
-panels_painted = []
 while instructions_and_data[instruction_pointer] != 99:
-    # Giving the camera picture(color) as input and expecting the program to store output value if any
-    command_returned = execute_command(instruction_pointer, relative_param_mode_base, lambda: hull[robot_position], lambda a: store_output(a))
+    command_returned = execute_command(instruction_pointer, relative_param_mode_base, keyboard_input, store_output)
     prev_phase = phase
-    # It will only really increase if an input/output command was executed
-    phase += command_returned[2]
-    # Just got our first output
+    phase = (phase + command_returned[2]) % 3
+    if phase == 1 and prev_phase == 0:
+        x = output_storage
     if phase == 2 and prev_phase == 1:
-        hull[robot_position] = output_storage
-        # Collect not yet visited but now painted panel
-        if robot_position not in panels_painted:
-            panels_painted.append(robot_position)
-    # We have got our movement instruction
-    if phase == 3:
-        (current_x, current_y) = robot_position
-        # Rotating robot according to program output
-        robot_head = (robot_head + 1) % 4 if output_storage == 1 else robot_head - 1
-        if robot_head == -1:
-            robot_head = 3
-        # Moving robot by one panel towards its heading
-        if robot_head == 0:
-            robot_position = (current_x, current_y - 1)
-        elif robot_head == 1:
-            robot_position = (current_x + 1, current_y)
-        elif robot_head == 2:
-            robot_position = (current_x, current_y + 1)
-        elif robot_head == 3:
-            robot_position = (current_x - 1, current_y)
-
+        y = output_storage
+    if phase == 0 and prev_phase == 2:
+        screen[x][y] = output_storage
     # Next instruction in IntCode computer
     instruction_pointer += command_returned[0]
     # Change the memory offset base (only changes with command no. 9 in reality)
     relative_param_mode_base += command_returned[1]
-    # If we are just done with a movement we should wait for the next input
-    if phase > 2:
-        phase = 0
 
-print("No of points painted at least once:", len(panels_painted))
+block_cnt = 0
+for row in screen:
+    for element in row:
+        if element == 2:
+            block_cnt += 1
+print(block_cnt)
 
-with open("output/hull_painting.txt", 'w') as out_file:
+with open("output/game_board.txt", 'w', encoding="utf-8") as out_file:
     # Transposed hull matrix as array handling made the x and y exchanged
-    for row in np.transpose(hull):
+    for row in np.transpose(screen):
         for element in row:
-            out_file.write(element.astype(str))
+            if element == 0:
+                game_tile = '  '
+            if element == 1:
+                game_tile = '██'
+            if element == 2:
+                game_tile = '░░'
+            if element == 3:
+                game_tile = '══'
+            if element == 4:
+                game_tile = '\u256d\u256e'
+            out_file.write(game_tile)
         out_file.write('\n')
