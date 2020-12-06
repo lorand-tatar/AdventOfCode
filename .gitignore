@@ -4,3 +4,6 @@ out
 
 # python
 venv
+build
+dist
+*.spec
