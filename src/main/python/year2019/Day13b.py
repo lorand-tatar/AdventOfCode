@@ -168,6 +168,14 @@ def draw_screen(points, screen):
         print('\n', end="")
 
 
+def check_keyboard_input():
+    if keyboard.is_pressed("left"):
+        return -1
+    elif keyboard.is_pressed("right"):
+        return 1
+    return 0
+
+
 np.set_printoptions(threshold=sys.maxsize)
 
 with open(file_path, 'r') as file:
@@ -180,28 +188,19 @@ for x in sequence.split(','):
     instructions_and_data[i] = int(x)
     i += 1
 
+# Game "hardware" init
 screen = np.zeros((40, 40))
 screen = screen.astype(int)
 phase = 0
 points = 0
-draw_screen(points, screen)
 points_calculation = False
 game_init = True
+# Inserting coin ;)
 instructions_and_data[0] = 2
 
 # Intcode computer reset
 instruction_pointer = 0
 relative_param_mode_base = 0
-
-
-def check_keyboard_input():
-    if keyboard.is_pressed("left"):
-        return -1
-    elif keyboard.is_pressed("right"):
-        return 1
-    return 0
-
-
 while instructions_and_data[instruction_pointer] != 99:
     command_returned = execute_command(instruction_pointer, relative_param_mode_base, check_keyboard_input, store_output)
     prev_phase = phase
@@ -210,6 +209,7 @@ while instructions_and_data[instruction_pointer] != 99:
         x = output_storage
         points_calculation = x == -1
         if points_calculation and game_init:
+            draw_screen(points, screen)
             game_init = False
     if phase == 2 and prev_phase == 1:
         y = output_storage
@@ -218,9 +218,9 @@ while instructions_and_data[instruction_pointer] != 99:
             screen[x][y] = output_storage
         else:
             points = output_storage
-        if not game_init:
+        if not game_init and (points_calculation or output_storage == 3 or output_storage == 4):
             draw_screen(points, screen)
-            time.sleep(0.001)
+            time.sleep(0.05)
 
     # Next instruction in IntCode computer
     instruction_pointer += command_returned[0]
