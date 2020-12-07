@@ -58,7 +58,8 @@ while not just_ore_needed(necessary_materiel):
                 if other[1] != -1 and other[0] == name:
                     sum += other[1]
                     other[1] = -1
-    # This is a mess
+    # This is a mess - should build a whole new list, with summarized quantities
+    # then the next -1 hunting is also unnecessary
             component[1] = sum
     print("Cleaned of resolved stuff, marked duplicates:", cleaned_list)
     necessary_materiel = []
