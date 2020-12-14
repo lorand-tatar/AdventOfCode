@@ -1,4 +1,4 @@
-import  re
+import re
 
 file_path = 'inputs/day14_input.txt'
 
