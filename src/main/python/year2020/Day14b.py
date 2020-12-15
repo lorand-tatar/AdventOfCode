@@ -16,10 +16,11 @@ with open(file_path, 'r') as file:
             raw_address = addressmatcher.group(1)
             binary_raw_address = bin(int(raw_address))[2:]
             no_of_bits = len(binary_raw_address)
+            binary_raw_address = ((36 - no_of_bits) * '0').__add__(binary_raw_address)
             i = 0
             masked_address = ""
             for bit in binary_raw_address:
-                current_mask_bit = mask[36 + i - no_of_bits]
+                current_mask_bit = mask[i]
                 if current_mask_bit != '0':
                     masked_address = masked_address.__add__(current_mask_bit)
                 else:
@@ -27,25 +28,28 @@ with open(file_path, 'r') as file:
                 i += 1
             addresses_to_write = set()
             number_of_x = len([elem for elem in masked_address if elem == 'X'])
-            if len(masked_address) < 10:
-                print("###########")
-                print(raw_address, mask)
-                print(masked_address, number_of_x)
+            # if line_no < 75:
+            #     print("###########")
+            #     print(raw_address, len(binary_raw_address), mask)
+            #     print(masked_address, len(masked_address), number_of_x)
             for fill_pattern in range(pow(2, number_of_x)):
                 new_address = masked_address
-                fill_pattern = bin(fill_pattern)[2:]
-                fill_pattern = ((number_of_x - len(fill_pattern)) * '0').__add__(fill_pattern)
-                for x_bit in fill_pattern:
+                binary_fill_pattern = bin(fill_pattern)[2:]
+                binary_fill_pattern = ((number_of_x - len(binary_fill_pattern)) * '0').__add__(binary_fill_pattern)
+                for x_bit in binary_fill_pattern:
                     new_address = new_address.replace('X', x_bit, 1)
                 addresses_to_write.add(int(new_address, 2))
-            if len(masked_address) < 10:
-                print(addresses_to_write)
+            # if line_no < 75:
+            #     print(addresses_to_write)
             for address in addresses_to_write:
                 memory[address] = int(value)
         line_no += 1
+        # if line_no == 75:
+        #     print("Entries:", len(memory.keys()))
+        #     print(memory)
+        #     subsum = 0
+        #     for key in memory.keys():
+        #         subsum += memory[key]
+        #     print("Subsum:", sum(memory.values()), "vs", subsum)
 
-
-sum_of_all = 0
-for key in memory.keys():
-    sum_of_all += memory[key]
-print("Sum of all memory values:", sum_of_all)
+print("Sum of all memory values:", sum(memory.values()))
