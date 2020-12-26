@@ -83,48 +83,41 @@ for checked_tile in tiles.keys():
     neighbors[checked_tile] = current_neighbors
     if found_edges == 2:
         corner_id_product *= checked_tile
-        print(checked_tile)
+        # print(checked_tile)
 
 
-def tweak_tile(id, right_rotation_cnt, twist, row_starter):
-    # print("For tile", id, "Right rotation ordered:", right_rotation_cnt, "Twist", twist, "First", row_starter)
+def tweak_tile(tile, right_rotation_cnt, twist, row_starter, tile_width=10):
+    # print("For tile", tile, "Right rotation ordered:", right_rotation_cnt, "Twist", twist, "Row starter", row_starer)
     # 0/4 rotation: don't rotate
     # 1 rotation: 90 degrees right
     # 2 rotation: 180 degrees
     # 3 rotation: 270 degrees right (90 degrees left)
     # if row starter, twist means vertical flip; else horizontal flip
-    tweaked_tile = np.zeros((10, 10)).astype(str)
-    for i in range(10):
-        for j in range(10):
+    tweaked_tile = np.zeros((tile_width, tile_width)).astype(str)
+    for i in range(tile_width):
+        for j in range(tile_width):
             x = i
             y = j
             if right_rotation_cnt == 1:
                 x = j
-                y = 9 - i
+                y = tile_width - 1 - i
             elif right_rotation_cnt == 2:
-                x = 9 - i
-                y = 9 - j
+                x = tile_width - 1 - i
+                y = tile_width - 1 - j
             elif right_rotation_cnt == 3:
-                x = 9 - j
+                x = tile_width - 1 - j
                 y = i
-            should_flip = (twist and row_starter and (right_rotation_cnt == 0 or right_rotation_cnt == 4 or right_rotation_cnt == 3)) or (
-                    (not twist) and row_starter and (right_rotation_cnt == 1 or right_rotation_cnt == 2)) or (
-                                  twist and (not row_starter) and (right_rotation_cnt == 1 or right_rotation_cnt == 0)) or (
-                                  (not twist) and (not row_starter) and (right_rotation_cnt == 2 or right_rotation_cnt == 3))
-            if should_flip and row_starter:
-                y = 9 - y
-            elif should_flip:
-                x = 9 - x
-            tweaked_tile[x][y] = tiles[id][i][j]
-    tiles[id] = tweaked_tile
-    return should_flip
+            if twist and row_starter:
+                y = tile_width - 1 - y
+            elif twist:
+                x = tile_width - 1 - x
+            tweaked_tile[x][y] = tile[i][j]
+    return tweaked_tile
 
 
 active_tile = (VERY_FIRST_TILE_ID, 2, 0, False)
 tiles_pool = neighbors.copy()
 arrangement = []
-flipped = False
-row_starter_flipped = False
 for i in range(IMAGE_SIZE_IN_NO_OF_TILES):
     # print("##### Setting up line", i + 1)
     arrangement_row = []
@@ -143,9 +136,6 @@ for i in range(IMAGE_SIZE_IN_NO_OF_TILES):
                     picked_neighbor = neighbor
                     break
         # print("Chosen neighbor for", active_tile[0], ":", picked_neighbor)
-        if picked_neighbor is not None:
-            flipped = tweak_tile(picked_neighbor[0], 3 - picked_neighbor[2], picked_neighbor[3] != flipped, False)
-            flipped = flipped != (picked_neighbor[2] == 1)
         arrangement_row.append(active_tile[0])
         active_tile = picked_neighbor
     arrangement.append(arrangement_row)
@@ -156,14 +146,117 @@ for i in range(IMAGE_SIZE_IN_NO_OF_TILES):
             if neighbor[0] in tiles_pool.keys():
                 # print("Found it!")
                 active_tile = neighbor
-                row_starter_flipped = tweak_tile(neighbor[0], 4 - neighbor[2], neighbor[3] != row_starter_flipped, True)
-                flipped = neighbor[2] == 2
-                row_starter_flipped = row_starter_flipped != (neighbor[2] == 2)
                 break
-print(arrangement)
+
+i = 0
+for row in arrangement:
+    j = 0
+    for tile_id in row:
+        # print("Tile", i, j)
+        current_tile = tiles[tile_id].copy()
+        if j == 0 and tile_id != VERY_FIRST_TILE_ID:
+            while ([k for k in tiles[arrangement[i - 1][0]][-1]] != [k for k in current_tile[0]]) and ([k for k in tiles[arrangement[i - 1][0]][-1][::-1]] != [k for k in current_tile[0]]):
+                # print("Rotating once")
+                current_tile = tweak_tile(current_tile, 1, False, True)
+            if [k for k in tiles[arrangement[i - 1][0]][-1]] != [k for k in current_tile[0]]:
+                # print("Need to flip")
+                current_tile = tweak_tile(current_tile, 0, True, True)
+        elif j != 0:
+            while ([row[-1] for row in tiles[arrangement[i][j - 1]]] != [row[0] for row in current_tile]) and ([row[-1] for row in tiles[arrangement[i][j - 1]]][::-1] != [row[0] for row in current_tile]):
+                # print("Rotating once")
+                current_tile = tweak_tile(current_tile, 1, False, False)
+            if [row[-1] for row in tiles[arrangement[i][j - 1]]] != [row[0] for row in current_tile]:
+                # print("Need to flip")
+                current_tile = tweak_tile(current_tile, 0, True, False)
+        tiles[tile_id] = current_tile
+        j += 1
+    i += 1
+
+for tile_id in tiles.keys():
+    tile = tiles[tile_id]
+    new_tile = []
+    tile = tile[1:9]
+    for row in tile:
+        new_tile.append(row[1:9])
+    tiles[tile_id] = new_tile
+
+image = np.zeros((8 * IMAGE_SIZE_IN_NO_OF_TILES, 8 * IMAGE_SIZE_IN_NO_OF_TILES)).astype(int)
+i = 0
+j = 0
+saved_i = 0
+saved_j = 0
+stuff_cnt = 0
 for row in arrangement:
     for tile_id in row:
+        i = saved_i
         for tile_row in tiles[tile_id]:
-            print(tile_row)
-        print()
-    print("========== NEW ROW =====================================")
+            j = saved_j
+            for pixel in tile_row:
+                if int(pixel) == 1:
+                    stuff_cnt += 1
+                image[i][j] = int(pixel)
+                j += 1
+            i += 1
+        saved_j = j
+    saved_i = i
+    saved_j = 0
+
+with open("output/radar_image.txt", 'w', encoding="utf-8") as out_file:
+    # Transposed game matrix as array handling made the x and y exchanged
+    for row in image:
+        for element in row:
+            if element == 0:
+                pixel = '.'
+            if element == 1:
+                pixel = '#'
+            out_file.write(pixel)
+        out_file.write('\n')
+
+print(arrangement)
+# print()
+# for row in arrangement:
+#     for tile_id in row:
+#         for tile_row in tiles[tile_id]:
+#             print(tile_row)
+#         print()
+#     print("========== NEW ROW =====================================")
+
+with open('inputs/day20b_monster.txt', 'r') as monster_file:
+    monster_pattern = []
+    for line in monster_file:
+        line = line.rstrip()
+        row = []
+        for char in line:
+            if char == '#':
+                row.append(1)
+            else:
+                row.append(0)
+        monster_pattern.append(row)
+
+monster_count = 0
+rotation_cnt = 0
+while monster_count == 0:
+    # print(rotation_cnt, "tweaks so far")
+    for i in range(8 * IMAGE_SIZE_IN_NO_OF_TILES - 2):
+        for j in range(8 * IMAGE_SIZE_IN_NO_OF_TILES - 19):
+            monster_found = True
+            rolling_i = i
+            while rolling_i < i + 3:
+                rolling_j = j
+                while rolling_j < j + 20:
+                    monster_found = monster_found and ((int(image[rolling_i][rolling_j]) == 1) or (monster_pattern[rolling_i - i][rolling_j - j] == 0))
+                    rolling_j += 1
+                rolling_i += 1
+            if monster_found:
+                monster_count += 1
+    if monster_count == 0 and rotation_cnt < 3:
+        image = tweak_tile(image, 1, False, False, 8 * IMAGE_SIZE_IN_NO_OF_TILES)
+        rotation_cnt += 1
+    elif monster_count == 0:
+        if rotation_cnt != 3:
+            image = tweak_tile(image, 0, True, False, 8 * IMAGE_SIZE_IN_NO_OF_TILES)
+        image = tweak_tile(image, 1, True, False, 8 * IMAGE_SIZE_IN_NO_OF_TILES)
+        rotation_cnt += 1
+
+print("This many monsters in the water:", monster_count)
+print("Water thickness without monsters:", stuff_cnt - monster_count * 15)
