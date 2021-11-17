@@ -1,4 +1,5 @@
 file_path = 'inputs/day14_input.txt'
+# file_path = 'inputs/day14_test_input.txt'
 
 rules = []
 with open(file_path, 'r') as file:
@@ -13,59 +14,65 @@ with open(file_path, 'r') as file:
         rule.append([product, int(amount)])
         rules.append(rule)
 
-fuel_rule = None
-for rule in rules:
-    if rule[len(rule) - 1][0] == "FUEL":
-        fuel_rule = rule
-        break
+print(rules)
 
-necessary_materiel = fuel_rule[:len(fuel_rule) - 1]
-
-
-def just_ore_needed(necessary_materiel):
-    for entry in necessary_materiel:
-        if entry[0] != "ORE":
-            return False
-    return True
+need = dict({"FUEL": 1})
+leftover = dict({})
+ore_needed = 0
+rules_applied = len(rules) * [0]
 
 
-while not just_ore_needed(necessary_materiel):
-    new_stuff_needed = []
-    for component in necessary_materiel:
-        if component[0] != "ORE":
-            for rule in rules:
-                if rule[len(rule) - 1][0] == component[0]:
-                    product_amount = rule[len(rule) - 1][1]
-                    necessary_product_amount = component[1]
-                    factor = (necessary_product_amount - 1) // product_amount + 1
-                    for stuff in rule[:len(rule) - 1]:
-                        stuff[1] = stuff[1] * factor
-                        new_stuff_needed.append(stuff)
-                    break
-            component[1] = -1
-    for stuff in new_stuff_needed:
-        necessary_materiel.append(stuff)
-    cleaned_list = []
-    for component in necessary_materiel:
-        if component[1] != -1:
-            cleaned_list.append(component)
-    for component in cleaned_list:
-        name = component[0]
-        saved = component[1]
-        sum = 0
-        if sum != -1:
-            for other in cleaned_list:
-                if other[1] != -1 and other[0] == name:
-                    sum += other[1]
-                    other[1] = -1
-    # This is a mess - should build a whole new list, with summarized quantities
-    # then the next -1 hunting is also unnecessary
-            component[1] = sum
-    print("Cleaned of resolved stuff, marked duplicates:", cleaned_list)
-    necessary_materiel = []
-    for component in cleaned_list:
-        if component[1] != -1:
-            necessary_materiel.append(component)
-    print("After final cleanup", necessary_materiel)
+def need_to_process(need):
+    for stuff in need:
+        if need[stuff] != 0:
+            return True
+    return False
 
-print(necessary_materiel)
+
+while need_to_process(need):
+    for stuff_to_craft in need:
+        if need[stuff_to_craft] != 0:
+            break
+    # Looking up stuff in the stores
+    stuff_name = stuff_to_craft
+    stuff_amount = need[stuff_to_craft]
+
+    if stuff_name not in leftover:
+        leftover[stuff_name] = 0
+    recycled_amount = leftover[stuff_name]
+    if recycled_amount < stuff_amount:
+        leftover[stuff_name] = 0
+        stuff_amount -= recycled_amount
+        #     Looking up the rule to craft the stuff
+        i = 0
+        for rule_for_craft in rules:
+            i += 1
+            if rule_for_craft[len(rule_for_craft) - 1][0] == stuff_name:
+                break
+
+        how_many_times = stuff_amount // rule_for_craft[len(rule_for_craft) - 1][1]
+        if stuff_amount % rule_for_craft[len(rule_for_craft) - 1][1] != 0:
+            how_many_times += 1
+        rules_applied[i - 1] = rules_applied[i - 1] + how_many_times
+        # We don't need these produced - go to the stores
+        leftover[stuff_name] = how_many_times * rule_for_craft[len(rule_for_craft) - 1][1] - stuff_amount
+
+        # Now we need the LHS of the equation
+        for ingredient in rule_for_craft:
+            if ingredient[0] != stuff_name:
+                if ingredient[0] != "ORE":
+                    if ingredient[0] not in need:
+                        need[ingredient[0]] = 0
+                    need[ingredient[0]] += how_many_times * ingredient[1]
+                else:
+                    ore_needed += how_many_times * ingredient[1]
+    else:
+        leftover[stuff_name] -= stuff_amount
+        if leftover[stuff_name] < 0:
+            leftover[stuff_name] = 0
+    need[stuff_name] = 0
+
+print("Ore needed", ore_needed)
+print("Rules applied", rules_applied)
+print("Need array - should be empty", need)
+print("Leftover stuff", leftover)
