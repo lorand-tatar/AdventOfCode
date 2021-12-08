@@ -49,4 +49,5 @@ for k in range(max(crab_positions) + 1):
     else:
         break
 
+print("Minimal position", k)
 print("Minimal consumption: ", min_fuel)
