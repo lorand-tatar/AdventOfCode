@@ -1,4 +1,4 @@
-file_path = 'inputs/day14_test.txt'
+file_path = 'inputs/day14.txt'
 
 base_material = ""
 rules = {}
@@ -47,62 +47,41 @@ for letter in material_histogram.keys():
         min_amount = material_histogram[letter]
 print("Diff of most and least frequent materiel:", max_amount - min_amount)
 
-rule_futures = {}
-for rule in rules.keys():
-    left_progenies = []
-    right_progenies = []
-    rolling_rule = rule[0] + rules[rule]
-    for i in range(50):
-        left_progenies.append(rolling_rule)
-        rolling_rule = rolling_rule[0] + rules[rolling_rule]
-    left_progenies.append(rolling_rule)
-    rolling_rule = rules[rule] + rule[1]
-    for i in range(50):
-        right_progenies.append(rolling_rule)
-        rolling_rule = rules[rolling_rule] + rolling_rule[1]
-    right_progenies.append(rolling_rule)
-    rule_futures[rule] = (left_progenies, right_progenies)
 
-no_of_rounds = 3
+no_of_rounds = 40
 starter_pairs = []
+pair_histogram = {}
 for i in range(len(base_material) - 1):
-    starter_pairs.append(base_material[i] + base_material[i + 1])
-print(starter_pairs)
-ns = 0
-vs = 0
-all_letters = 0
-for starter in starter_pairs:
-    # print(rule_futures[starter])
-    print("Investigating starter", starter)
-    left_product = rule_futures[starter][0][no_of_rounds - 1][1]
-    right_product = rule_futures[starter][1][no_of_rounds - 1][0]
-    print("Left and right product of starter:", left_product, right_product)
-    all_letters += 4
-    if 'H' == left_product:
-        ns += 1
-    if 'H' == right_product:
-        ns += 1
-    if 'B' == left_product:
-        vs += 1
-    if 'B' == right_product:
-        vs += 1
-    investigated_pair = (rule_futures[starter][0][1][1] + rule_futures[starter][0][0][1], rule_futures[starter][1][0][0] + rule_futures[starter][1][1][0])
-    for j in range(no_of_rounds - 2, 0, -1):
-        print("New pair to check", investigated_pair, "for", j, "rounds")
-        left_product = rule_futures[investigated_pair[0]][0][j - 1][1]
-        right_product = rule_futures[investigated_pair[1]][1][j - 1][0]
-        all_letters += 2
-        print("Left and right product of starter:", left_product, right_product)
-        if 'H' == left_product:
-            ns += 1
-        if 'H' == right_product:
-            ns += 1
-        if 'B' == left_product:
-            vs += 1
-        if 'B' == right_product:
-            vs += 1
-        investigated_pair = (rules[investigated_pair[0]] + investigated_pair[0][1], investigated_pair[1][0] + rules[investigated_pair[1]])
+    pair = base_material[i] + base_material[i + 1]
+    starter_pairs.append(pair)
+    if pair not in pair_histogram.keys():
+        pair_histogram[pair] = 1
+    else:
+        pair_histogram[pair] += 1
+# print(starter_pairs)
 
-print("Ns, Vs:", ns, vs, "Difference:", vs - ns)
-print(all_letters)
+for i in range(no_of_rounds):
+    next_histogram = {}
+    for pair_key in pair_histogram.keys():
+        children = [pair_key[0] + rules[pair_key], rules[pair_key] + pair_key[1]]
+        for child in children:
+            if child not in next_histogram.keys():
+                next_histogram[child] = pair_histogram[pair_key]
+            else:
+                next_histogram[child] += pair_histogram[pair_key]
+    pair_histogram = next_histogram.copy()
+
+letter_histogram = {}
+for pair in pair_histogram.keys():
+    for letter in pair:
+        if letter not in letter_histogram.keys():
+            letter_histogram[letter] = pair_histogram[pair]
+        else:
+            letter_histogram[letter] += pair_histogram[pair]
+for letter in letter_histogram.keys():
+    letter_histogram[letter] //= 2
+letter_histogram[base_material[0]] += 1
+letter_histogram[base_material[-1]] += 1
+print(letter_histogram)
+print("Diff between max and min:", max(letter_histogram.values()) - min(letter_histogram.values()))
 
