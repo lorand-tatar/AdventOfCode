@@ -1,4 +1,4 @@
-file_path = 'inputs/day14.txt'
+file_path = 'inputs/day14_test.txt'
 
 base_material = ""
 rules = {}
@@ -37,7 +37,7 @@ for material in new_material:
         material_histogram[material] = 1
     else:
         material_histogram[material] += 1
-# print(material_histogram)
+print(material_histogram)
 max_amount = 0
 min_amount = 10000000
 for letter in material_histogram.keys():
@@ -47,108 +47,62 @@ for letter in material_histogram.keys():
         min_amount = material_histogram[letter]
 print("Diff of most and least frequent materiel:", max_amount - min_amount)
 
-rule_loops = {}
-for rule_left in rules.keys():
+rule_futures = {}
+for rule in rules.keys():
     left_progenies = []
     right_progenies = []
-    rolling_rule = rule_left[0] + rules[rule_left]
-    while rolling_rule not in left_progenies:
+    rolling_rule = rule[0] + rules[rule]
+    for i in range(50):
         left_progenies.append(rolling_rule)
         rolling_rule = rolling_rule[0] + rules[rolling_rule]
     left_progenies.append(rolling_rule)
-    rolling_rule = rules[rule_left] + rule_left[1]
-    while rolling_rule not in right_progenies:
+    rolling_rule = rules[rule] + rule[1]
+    for i in range(50):
         right_progenies.append(rolling_rule)
         rolling_rule = rules[rolling_rule] + rolling_rule[1]
     right_progenies.append(rolling_rule)
-    rule_loops[rule_left] = (left_progenies, right_progenies)
-# print(rule_loops)
+    rule_futures[rule] = (left_progenies, right_progenies)
 
-loop_data = {}
-for start_point in rule_loops.keys():
-    left_last = rule_loops[start_point][0][-1]
-    left_n_const = []
-    left_n_mod = []
-    left_v_const = []
-    left_v_mod = []
-    left_mod = 0
-    i = 0
-    const_phase = True
-    for left_progeny in rule_loops[start_point][0]:
-        seek_end = False
-        if left_progeny == left_last and const_phase:
-            const_phase = False
-            seek_end = True
-            i = 0
-        if const_phase:
-            if left_progeny[1] == 'V':
-                left_v_const.append(i)
-            elif left_progeny[1] == 'N':
-                left_n_const.append(i)
-        elif left_progeny != left_last or not seek_end:
-            if left_progeny[1] == 'V':
-                left_v_mod.append(i)
-            elif left_progeny[1] == 'N':
-                left_n_mod.append(i)
-            left_mod += 1
-        i += 1
-    left_data = [left_v_const, left_v_mod, left_n_const, left_n_mod, left_mod]
-    right_last = rule_loops[start_point][1][-1]
-    right_n_const = []
-    right_n_mod = []
-    right_v_const = []
-    right_v_mod = []
-    right_mod = 0
-    i = 0
-    const_phase = True
-    for right_progeny in rule_loops[start_point][1]:
-        seek_end = False
-        if right_progeny == right_last and const_phase:
-            const_phase = False
-            seek_end = True
-            i = 0
-        if const_phase:
-            if right_progeny[0] == 'V':
-                right_v_const.append(i)
-            elif right_progeny[0] == 'N':
-                right_n_const.append(i)
-        elif right_progeny != right_last or not seek_end:
-            if right_progeny[0] == 'V':
-                right_v_mod.append(i)
-            elif right_progeny[0] == 'N':
-                right_n_mod.append(i)
-            right_mod += 1
-        i += 1
-    right_data = [right_v_const, right_v_mod, right_n_const, right_n_mod, right_mod]
-    loop_data[start_point] = [left_data, right_data]
-print(loop_data)
-
-steps = 40
-vs = 0
-ns = 0
+no_of_rounds = 3
+starter_pairs = []
 for i in range(len(base_material) - 1):
-    generated = rules[base_material[i] + base_material[i + 1]]
-    starter_pair = (base_material[i] + generated, generated + base_material[i + 1])
-    for step_cnt in range(steps, 1, -1):
-        if step_cnt in loop_data[starter_pair[0]][0][0]:
-            vs += 1
-        elif step_cnt in loop_data[starter_pair[0]][0][2]:
+    starter_pairs.append(base_material[i] + base_material[i + 1])
+print(starter_pairs)
+ns = 0
+vs = 0
+all_letters = 0
+for starter in starter_pairs:
+    # print(rule_futures[starter])
+    print("Investigating starter", starter)
+    left_product = rule_futures[starter][0][no_of_rounds - 1][1]
+    right_product = rule_futures[starter][1][no_of_rounds - 1][0]
+    print("Left and right product of starter:", left_product, right_product)
+    all_letters += 4
+    if 'H' == left_product:
+        ns += 1
+    if 'H' == right_product:
+        ns += 1
+    if 'B' == left_product:
+        vs += 1
+    if 'B' == right_product:
+        vs += 1
+    investigated_pair = (rule_futures[starter][0][1][1] + rule_futures[starter][0][0][1], rule_futures[starter][1][0][0] + rule_futures[starter][1][1][0])
+    for j in range(no_of_rounds - 2, 0, -1):
+        print("New pair to check", investigated_pair, "for", j, "rounds")
+        left_product = rule_futures[investigated_pair[0]][0][j - 1][1]
+        right_product = rule_futures[investigated_pair[1]][1][j - 1][0]
+        all_letters += 2
+        print("Left and right product of starter:", left_product, right_product)
+        if 'H' == left_product:
             ns += 1
-        elif step_cnt - (len(rule_loops[starter_pair[0]]) - 1 - loop_data[starter_pair[0]][0][4]) > 0:
-            if step_cnt - (len(rule_loops[starter_pair[0]]) - 1 - loop_data[starter_pair[0]][0][4]) % loop_data[starter_pair[0]][0][4] in loop_data[starter_pair[0]][0][1]:
-                vs += 1
-            elif step_cnt - (len(rule_loops[starter_pair[0]]) - 1 - loop_data[starter_pair[0]][0][4]) % loop_data[starter_pair[0]][0][4] in loop_data[starter_pair[0]][0][3]:
-                ns += 1
-        if step_cnt in loop_data[starter_pair[1]][1][0]:
-            vs += 1
-        elif step_cnt in loop_data[starter_pair[1]][1][2]:
+        if 'H' == right_product:
             ns += 1
-        elif step_cnt - (len(rule_loops[starter_pair[1]]) - 1 - loop_data[starter_pair[1]][1][4]) > 0:
-            if step_cnt - (len(rule_loops[starter_pair[1]]) - 1 - loop_data[starter_pair[1]][1][4]) % loop_data[starter_pair[1]][1][4] in loop_data[starter_pair[1]][1][1]:
-                vs += 1
-            elif step_cnt - (len(rule_loops[starter_pair[1]]) - 1 - loop_data[starter_pair[1]][1][4]) % loop_data[starter_pair[1]][1][4] in loop_data[starter_pair[1]][1][3]:
-                ns += 1
-        new_pair = (rules[starter_pair[0]] + starter_pair[0][1], starter_pair[1][0] + rules[starter_pair[1]])
-        starter_pair = new_pair
+        if 'B' == left_product:
+            vs += 1
+        if 'B' == right_product:
+            vs += 1
+        investigated_pair = (rules[investigated_pair[0]] + investigated_pair[0][1], investigated_pair[1][0] + rules[investigated_pair[1]])
 
-print("Vs", vs, "Ns", ns)
+print("Ns, Vs:", ns, vs, "Difference:", vs - ns)
+print(all_letters)
+
